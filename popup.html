@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Gemini Video Analyzer</title>
+  <style>
+    body {
+      width: 400px;
+      padding: 10px;
+    }
+    #result, #transcription {
+      margin-top: 10px;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    #videoPreview {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+    #canvas {
+      display: none;
+    }
+    .progress {
+      margin-top: 10px;
+      display: none;
+    }
+    .section-title {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h3>Gemini Video Analyzer</h3>
+  <input type="file" id="videoInput" accept="video/*">
+  <video id="videoPreview" controls style="display: none;"></video>
+  <canvas id="canvas"></canvas>
+  <div class="progress">Processing: <span id="progressText">0%</span></div>
+  
+  <div class="section-title">Visual Analysis:</div>
+  <div id="result"></div>
+  
+  <div class="section-title">Audio Transcription:</div>
+  <div id="transcription"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
