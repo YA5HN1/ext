@@ -1,28 +1,32 @@
+// Background script for handling context menu and image analysis
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: "analyzeImage",
-    title: "Analyze with Gemini",
-    contexts: ["image"]
+    id: "analyzeVideo",
+    title: "Analyze Video with Gemini",
+    contexts: ["video"]
   });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "analyzeImage") {
-    analyzeImage(info.srcUrl);
+  if (info.menuItemId === "analyzeVideo") {
+    analyzeVideo(info.srcUrl);
   }
 });
 
-async function analyzeImage(imageUrl) {
+async function analyzeVideo(videoUrl) {
   try {
-    const response = await fetch(imageUrl);
+    const response = await fetch(videoUrl);
     const blob = await response.blob();
     const base64 = await blobToBase64(blob);
     
     const result = await sendToGemini(base64);
-    // Send result to popup
     chrome.runtime.sendMessage({ type: 'analysisResult', result });
   } catch (error) {
-    console.error('Error analyzing image:', error);
+    console.error('Error analyzing video:', error);
+    chrome.runtime.sendMessage({ 
+      type: 'analysisError', 
+      error: error.message 
+    });
   }
 }
 
@@ -35,18 +39,18 @@ function blobToBase64(blob) {
   });
 }
 
-async function sendToGemini(base64Image) {
+async function sendToGemini(base64Data) {
   const API_KEY = 'AIzaSyBoKzwUFlqFJd4B7VK3Xg9i8D37-0wdLP0';
   const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent';
 
   const requestBody = {
     contents: [{
       parts: [{
-        text: "Describe this image in detail:",
+        text: "Analyze this video content in detail:",
       }, {
         inline_data: {
-          mime_type: "image/jpeg",
-          data: base64Image
+          mime_type: "video/mp4",
+          data: base64Data
         }
       }]
     }]
@@ -61,5 +65,8 @@ async function sendToGemini(base64Image) {
   });
 
   const data = await response.json();
+  if (!data.candidates || !data.candidates[0]) {
+    throw new Error('Invalid response from Gemini API');
+  }
   return data.candidates[0].content.parts[0].text;
-} 
+}
