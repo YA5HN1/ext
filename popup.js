@@ -165,7 +165,7 @@ async function analyzeWithGemini(data, isImage = false) {
 async function generateVideoSummary(frameDescriptions, transcript) {
   const prompt = `
     Please provide a instagram algorithm friendely caption and hashtags for this video based on the following analysis:
-
+remember to provide single caption and show hashtags in smallcase.
     Frame Analysis:
     ${frameDescriptions.join('\n')}
 
@@ -280,9 +280,61 @@ async function getTranscriptionFromAssemblyAI(audioUrl) {
 
 // Results Update
 function updateResults(summary, frameDescriptions, transcript) {
-  summaryDiv.innerHTML = `<h3>Summary</h3><p>${summary}</p>`;
-  frameAnalysisDiv.innerHTML = `<h3>Frame Analysis</h3><p>${frameDescriptions.join('\n\n')}</p>`;
-  transcriptionDiv.innerHTML = `<h3>Transcription</h3><p>${transcript}</p>`;
+  // Format the summary text
+  const formattedSummary = summary
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Convert **text** to <strong>text</strong>
+    .split('\n')
+    .map(line => {
+      if (line.trim().startsWith('>')) {
+        return `<p>${line.substring(1).trim()}</p>`; // Convert >text to <p>text</p>
+      } else if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
+        return `<li>${line.substring(1).trim()}</li>`; // Convert *text to bullet point
+      }
+      return line;
+    })
+    .join('\n');
+
+  // Format frame descriptions
+  const formattedFrameDescriptions = frameDescriptions
+    .map(desc => {
+      const formatted = desc
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .split('\n')
+        .map(line => {
+          if (line.trim().startsWith('>')) {
+            return `<p>${line.substring(1).trim()}</p>`;
+          } else if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
+            return `<li>${line.substring(1).trim()}</li>`;
+          }
+          return line;
+        })
+        .join('\n');
+      return formatted;
+    })
+    .join('\n\n');
+
+  // Format transcript
+  const formattedTranscript = transcript
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .split('\n')
+    .map(line => {
+      if (line.trim().startsWith('>')) {
+        return `<p>${line.substring(1).trim()}</p>`;
+      } else if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
+        return `<li>${line.substring(1).trim()}</li>`;
+      }
+      return line;
+    })
+    .join('\n');
+
+  // Wrap lists in ul tags where needed
+  const wrapListItems = (html) => {
+    return html.replace(/<li>.*?<\/li>(\n<li>.*?<\/li>)*/g, match => `<ul>${match}</ul>`);
+  };
+
+  summaryDiv.innerHTML = `<h3>Summary</h3>${wrapListItems(formattedSummary)}`;
+  frameAnalysisDiv.innerHTML = `<h3>Frame Analysis</h3>${wrapListItems(formattedFrameDescriptions)}`;
+  transcriptionDiv.innerHTML = `<h3>Transcription</h3>${wrapListItems(formattedTranscript)}`;
   progressContainer.style.display = 'none';
 }
 
